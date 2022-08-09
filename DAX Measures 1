@@ -1,0 +1,32 @@
+--Creating several measures in DAX on Power BI for different metrics.
+
+--Cost of Goods
+COGS = SUM(Sales[COGS])
+
+--%Cost of Goods
+% COGS = 
+DIVIDE(
+    [COGS],
+    CALCULATE(
+        [COGS],
+        ALL(Vendors)
+    )
+)
+
+--GMV
+GMV = SUM('Sales'[GMV])
+
+--%GMV
+% GMV = 
+DIVIDE(
+    [GMV],
+CALCULATE(
+    [GMV],
+    ALL('Sales')
+))
+
+--Sales Profit
+Sales Profit = SUM(Sales[Sales Profit])
+
+--% Gross Margin
+% Gross Margin = DIVIDE([Sales Profit], [GMV], 0)
