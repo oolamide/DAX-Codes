@@ -99,3 +99,19 @@ Rank CGMV = RANKX( ALL(Customers), [GMV] )
 
 --Gross Profit
 Gross Profit = [Sales Profit] + [Advisory Trainings]
+
+--Cost of Goods Sold
+COGS = SUM(Sales[COGS])
+
+--% Cost of Goods
+% COGS = 
+DIVIDE(
+    [COGS],
+    CALCULATE(
+        [COGS],
+        ALL(Vendors)
+    )
+)
+
+--Cost of Sales
+Cost of Sales = [COGS] + Sum(Sales[Bank Charges])
