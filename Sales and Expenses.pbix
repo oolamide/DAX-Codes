@@ -1,0 +1,101 @@
+--Total Sales Transactions
+GMV = SUM('Sales'[GMV])
+
+--Orders
+Orders = DISTINCTCOUNT('Sales'[Order No.])
+
+--Previous Month Orders
+PM Orders = 
+    CALCULATE('Key Measures'[Orders],DATEADD('Date'[Date],-1,MONTH))
+
+--% Month on Month Orders
+% MOM Orders = 
+VAR PMOrders =
+    CALCULATE([Orders],DATEADD('Date'[Date],-1,MONTH))
+    Return 
+        DIVIDE(([Orders]-PMOrders), PMOrders)
+        
+--% Orders
+% Orders = 
+DIVIDE(
+    [Orders],
+    CALCULATE(
+        [Orders],
+        ALL('Sales')
+    )
+    
+--Average Order Size
+AOS = DIVIDE([GMV], [Orders], 0)
+
+--Ranking of Customers based on Orders
+Rank COrders = RANKX( ALL(Customers), [Orders] )
+
+--% GMV
+% GMV = 
+DIVIDE(
+    [GMV],
+CALCULATE(
+    [GMV],
+    ALL('Sales')
+))
+
+--Sales Profit
+Sales Profit = SUM(Sales[Sales Profit])
+
+--% Gross Margin
+% Gross Margin = DIVIDE([Sales Profit], [GMV], 0)
+
+--GMV of Previous Month
+PM GMV = 
+    CALCULATE('Key Measures'[GMV],DATEADD('Date'[Date],-1,MONTH))
+    
+--GMV of Previous Quarter
+PQ GMV = 
+    CALCULATE('Key Measures'[GMV],DATEADD('Date'[Date],-1,QUARTER))
+
+--GMV of Previous Year
+PY GMV = 
+    CALCULATE('Key Measures'[GMV],DATEADD('Date'[Date],-1,YEAR))
+
+--% Month on Month based on GMV
+% MOM GMV = 
+VAR PMGMV =
+    CALCULATE([GMV],DATEADD('Date'[Date],-1,MONTH))
+    Return 
+        DIVIDE(([GMV]-PMGMV), PMGMV)
+        
+--Net Profit
+Net Profit = Calculate ([Gross Profit]-[Expenses])
+        
+ --% Net Margin
+% Net Margin = DIVIDE([Net Profit], [GMV], 0)
+
+--Expenses
+Expenses = SUM(Expenses[Total Cost of Item])
+
+--% Operational Expenses
+% Operational Expenses = DIVIDE([Expenses], [GMV], 0)
+
+--% Quarter on Quarter based on GMV
+% QOQ GMV = 
+VAR PQGMV =
+    CALCULATE([GMV],DATEADD('Date'[Date],-1,QUARTER))
+    Return 
+        DIVIDE(([GMV]-PQGMV), PQGMV)
+        
+--% Year on Year based on GMV
+% YOY GMV = 
+VAR PYGMV =
+    CALCULATE([GMV],DATEADD('Date'[Date],-1,YEAR))
+    Return 
+        DIVIDE(([GMV]-PYGMV), PYGMV)
+    
+--Ranking of Customers based on GMV
+Rank CGMV = RANKX( ALL(Customers), [GMV] )
+
+
+--% Gross Margin
+% Gross Margin = DIVIDE([Sales Profit], [GMV], 0)
+
+--Gross Profit
+Gross Profit = [Sales Profit] + [Advisory Trainings]
