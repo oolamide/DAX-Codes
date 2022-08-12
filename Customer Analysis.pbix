@@ -1,0 +1,215 @@
+--Calculating Total Paying Customers
+Total Customers = 
+CALCULATE(
+	DISTINCTCOUNT('Customers'[Customer/Company Name]),
+	FILTER(
+		ALLSELECTED('Date'[Date]),
+		ISONORAFTER('Date'[Date], MAX('Date'[Date]), DESC)
+	)
+)
+
+--Customers Per Period
+Customers Per Period = DISTINCTCOUNT(Sales[Customer/Company Name])
+
+--Previous Month Customers
+PM Customers = 
+    CALCULATE('Key Measures'[Total Customers],DATEADD('Date'[Date],-1,MONTH))
+
+--% Month on Month based on Customers
+% MOM Customers = 
+VAR PMCustomers =
+    CALCULATE([Customers Per Period],DATEADD('Date'[Date],-1,MONTH))
+    Return 
+        DIVIDE(([Customers Per Period]-PMCustomers), PMCustomers)
+
+--Running Total Customers 
+RT Customers = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+return
+if(_salesthisperiod>0,
+    CALCULATE(
+        [Customers Per Period],
+        FILTER(
+            ALLSELECTED('Date'[Date]),
+            ISONORAFTER('Date'[Date], _currdate, DESC)
+        )
+    )
+)
+
+--New Customers based on a fixed period of one year
+New Customers - Fixed Period = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+var _customers=
+ADDCOLUMNS(
+    Customers,
+    "Sales Until Now",
+    CALCULATE(
+        [GMV],
+    DATESINPERIOD(
+        'Date'[Date],
+        _currdate,
+        -1,
+        YEAR)),
+    "Running Total Sales",
+    [RT GMV]
+)
+var _newcustomers=
+FILTER(_customers,
+[Running Total Sales]=[Sales Until Now] &&
+[Sales Until Now]>0)
+return
+if(_salesthisperiod>0,
+COUNTROWS(_newcustomers))
+
+--New Customers based on a dynamic period
+New Customers = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+var _customers=
+ADDCOLUMNS(
+    Customers,
+    "Sales Until Now",
+    CALCULATE(
+        [GMV],
+    DATESINPERIOD(
+        'Date'[Date],
+        _currdate,
+        -1*[Period Value],
+        MONTH)),
+    "Running Total Sales",
+    [RT GMV]
+)
+var _newcustomers=
+FILTER(_customers,
+[Running Total Sales]=[Sales Until Now] &&
+[Sales Until Now]>0)
+return
+if(_salesthisperiod>0,
+COUNTROWS(_newcustomers))
+
+--Returning Customers based on a fixed time period of one year
+Returning Customers - Fixed period = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+var _customers=
+ADDCOLUMNS(
+    Customers,
+    "Sales Until Now",
+    CALCULATE(
+        [GMV],
+    DATESINPERIOD(
+        'Date'[Date],
+        _currdate,
+        -1,
+        YEAR)),
+    "Running Total Sales",
+    [RT GMV])
+var _returningcustomers=
+FILTER(_customers,
+[Sales Until Now]>0 && [Sales Until Now]<[Running Total Sales])
+return
+if(_salesthisperiod>0,
+COUNTROWS(_returningcustomers))
+
+--Returning Customers based on a dynamic period
+Returning Customers = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+var _customers=
+ADDCOLUMNS(
+    Customers,
+    "Sales Until Now",
+    CALCULATE(
+        [GMV],
+    DATESINPERIOD(
+        'Date'[Date],
+        _currdate,
+        -1*[Period Value],
+        MONTH)),
+    "Running Total Sales",
+    [RT GMV])
+var _returningcustomers=
+FILTER(_customers,
+[Sales Until Now]>0 && [Sales Until Now]<[Running Total Sales])
+return
+if(_salesthisperiod>0,
+COUNTROWS(_returningcustomers))
+
+--Lost Customers based on a fixed period of one year
+Lost Customers - Fixed Period = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+var _customers=
+ADDCOLUMNS(
+    Customers,
+    "Sales Until Now",
+    CALCULATE(
+        [GMV],
+    DATESINPERIOD(
+        'Date'[Date],
+        _currdate,
+        -1,
+        YEAR)),
+    "Running Total Sales",
+    [RT GMV]
+)
+var _lostcustomers=
+FILTER(_customers,
+[Running Total Sales]>0 && [Sales Until Now]=0)
+return
+if(_salesthisperiod>0,
+COUNTROWS(_lostcustomers)
+)
+
+--Lost Customers based on a dynamic period
+Lost Customers = 
+var _currdate=MAX('Date'[Date])
+var _salesthisperiod=[GMV]
+var _customers=
+ADDCOLUMNS(
+    Customers,
+    "Sales Until Now",
+    CALCULATE(
+        [GMV],
+    DATESINPERIOD(
+        'Date'[Date],
+        _currdate,
+        -1*[Period Value],
+        MONTH)),
+    "Running Total Sales",
+    [RT GMV]
+)
+var _lostcustomers=
+FILTER(_customers,
+[Running Total Sales]>0 && [Sales Until Now]=0)
+return
+if(_salesthisperiod>0,
+COUNTROWS(_lostcustomers)
+)
+
+----% Lost Customers
+% Lost Customers = DIVIDE([Lost Customers], [Total Customers], 0)
+        
+--% New Customers
+% New Customers = DIVIDE([New Customers], [Total Customers], 0)
+
+--% Returning Customers
+% Returning Customers = DIVIDE([Returning Customers], [Total Customers], 0)
+
+--% Churn Rate
+%Churn Rate = [Lost Customers] / COUNT(Customers[Customer/Company Name])
+
+--Customer Acquisition Cost
+CAC = DIVIDE('Key Measures'[Marketing], COUNT(Customers[Customer/Company Name]))
+
+--Customer Retention Rate
+Customer Retention Rate = 'Key Measures'[Returning Customers] / COUNT(Customers[Customer/Company Name])
+    
+--Ranking of Customers based on GMV
+Rank CGMV = RANKX( ALL(Customers), [GMV] )
+
+--Ranking of Customers based on Orders
+Rank COrders = RANKX( ALL(Customers), [Orders] )
+
